@@ -1,7 +1,7 @@
 var express = require('express');
 var {IstrolidClient} = require('./IstrolidClient.js');
 
-const PORT = 80;
+const PORT = process.env.PORT || 8080;
 
 var app = express();
 
