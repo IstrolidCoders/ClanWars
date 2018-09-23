@@ -3,6 +3,7 @@ var {IstrolidClient} = require('./IstrolidClient.js');
 var pg = require('pg');
 
 const PORT = process.env.PORT || 8080;
+const DEBUG = process.env.DEBUG;
 
 var db = new pg.Client({
     connectionString: process.env.DATABASE_URL,
@@ -35,17 +36,22 @@ var server = app.listen(PORT, function () {
 
 globalServer.on('server', s => {
     if(!istroClients[s.name]) {
-        let client = new IstrolidClient(s.name);
-        client.on('gameended', e => {
-            db.query('INSERT INTO BattleRecords (server, type, players, win) VALUES ($1, $2, $3::json[], $4);',
-                [client.serverName, client.serverType, e.players.map(p => JSON.stringify(p)), e.win],
-                (err, res) => {
-                    if(err) throw err;
-                });
-        });
+        if(s.name) {
+            if(DEBUG) console.log("Connecting to server", s.name);
+            let client = new IstrolidClient(s.name);
+            client.on('gameended', e => {
+                if(DEBUG)
+                    console.log("Game ended", [client.serverName, client.serverType, e.players.map(p => JSON.stringify(p)), e.win]),
+                db.query('INSERT INTO BattleRecords (server, type, players, win) VALUES ($1, $2, $3::json[], $4);',
+                    [client.serverName, client.serverType, e.players.map(p => JSON.stringify(p)), e.win],
+                    (err, res) => {
+                        if(err) throw err;
+                    });
+            });
 
-        client.connect();
-        istroClients.push(client);
+            client.connect();
+            istroClients.push(client);
+        }
     }
 });
 
