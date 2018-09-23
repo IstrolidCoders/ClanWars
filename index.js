@@ -41,9 +41,9 @@ istroGlobal.on('server', s => {
             let client = new IstrolidClient(s.name);
             client.on('gameended', e => {
                 if(DEBUG)
-                    console.log("Game ended", [client.serverName, client.serverType, e.players.map(p => JSON.stringify(p)), e.win]);
+                    console.log("Game ended", [client.serverName, client.intp.serverType, e.players.map(p => JSON.stringify(p)), e.win]);
                 db.query('INSERT INTO BattleRecords (server, type, players, win) VALUES ($1, $2, $3::json[], $4);',
-                    [client.serverName, client.serverType, e.players.map(p => JSON.stringify(p)), e.win],
+                    [client.serverName, client.intp.serverType, e.players.map(p => JSON.stringify(p)), e.win],
                     (err, res) => {
                         if(err) throw err;
                     });

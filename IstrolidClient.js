@@ -29,6 +29,7 @@ var IstrolidClient = function(serverName) {
     this.intp = null;
     this.network = null;
     this.rootNet = null;
+    this.serverName = serverName;
     this.global = serverName ? false : true;
 
     this.chat = {
