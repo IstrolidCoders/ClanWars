@@ -1248,7 +1248,10 @@ zjson - binary json sirelizer with some strange features
                 this.emitter.emit('gamestarting');
             }
             if (this.state === "ended") {
-                this.emitter.emit('gameended', {side: this.winningSide});
+                this.emitter.emit('gameended', {
+                    players: this.players.filter(p => p.side === "alpha" || p.side === "beta"),
+                    win: this.winningSide
+                });
             }
             if (data.serverType) {
                 this.serverType = data.serverType;
