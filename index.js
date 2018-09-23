@@ -15,10 +15,10 @@ var istroClients = [];
 var globalServer = new IstrolidClient();
 
 app.get('/istrolid', (req, res) => {
-    db.query('SELECT * from BattleRecords;', (err, res) => {
+    db.query('SELECT * from BattleRecords;', (err, qres) => {
         if(err) throw err;
         let r = "";
-        for(let row of res.rows) {
+        for(let row of qres.rows) {
             r += JSON.stringify(row) + "<br/>";
         }
         res.send(r);
