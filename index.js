@@ -15,6 +15,7 @@ var app = express();
 var istroClient = new IstrolidClient();
 
 app.get('/istrolid', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
     db.query('SELECT * from BattleRecords;', (err, qres) => {
         if(err) throw err;
         res.json(qres.rows);
