@@ -16,7 +16,7 @@ var istroClient = new IstrolidClient();
 
 app.get('/istrolid', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    db.query('SELECT * FROM (SELECT * from BattleRecords ORDER BY id DESC LIMIT 50) AS t ORDER BY id ASC;', (err, qres) => {
+    db.query('SELECT * from BattleRecords ORDER BY id DESC LIMIT 50;', (err, qres) => {
         if(err) throw err;
         res.json(qres.rows);
     });
