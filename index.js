@@ -17,11 +17,7 @@ var istroClient = new IstrolidClient();
 app.get('/istrolid', (req, res) => {
     db.query('SELECT * from BattleRecords;', (err, qres) => {
         if(err) throw err;
-        let r = "";
-        for(let row of qres.rows) {
-            r += JSON.stringify(row) + "<br/>";
-        }
-        res.send(r);
+        res.json(qres.rows);
     });
 });
 

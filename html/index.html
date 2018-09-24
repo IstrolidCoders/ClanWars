@@ -1,1 +1,37 @@
-Hello world
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+    <head>
+        <link rel="icon" type="image/png" href="/favicon.png"/>
+    </head>
+    <body>
+        <center><b>Istrolid Battle Records</b></center>
+        <table id="data"</table>
+        <script>
+            function updateData() {
+                var http  = new XMLHttpRequest();
+                http.onreadystatechange = () => {
+                    if(this.readyState == 4 && this.status == 200) {
+                        var rows = this.response;
+                        if(Array.isArray(rows)) {
+                            let data = ""
+                            rows.forEach(e => {
+                                data += "<tr><td>" + e.server + "</td><td>" + e.type + "</td><td>" + e.win + "</td></tr>";
+                            });
+
+                            let table = document.getElementById('data');
+                            table.insertAdjacentHTML('beforeend', data);
+                        } else {
+                            console.log("Invalid response");
+                        }
+                    }
+                };
+                http.responseType = 'json';
+                http.open('GET', "/istrolid", true);
+                http.send();
+            }
+            setInterval(updateData, 30000);
+            updateData();
+        </script>
+    </body>
+</html>
