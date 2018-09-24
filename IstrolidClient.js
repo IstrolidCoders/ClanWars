@@ -4,7 +4,7 @@
  * istroClient.on(event, () =>{});
  * istroClient.close();
  *
- * event can be message, server, serverchange, gameended, gamestarting
+ * event can be serverchange, gameended, gamestarting
  */
 var WebSocket = require('websocket').w3cwebsocket;
 var util = require('util');
@@ -19,18 +19,16 @@ var VERSION = 48;
 var MINOR_VERSION = 3;
 
 var account = {
-    email: "r11010@mail.com",
-    token: "332f0722726ab883bac1f65c4a0749f0752160a1"
+    email: "cwbot@example.com",
+    token: "5e0326c1b9691dcdcfada73b922b07fd833da300"
 };
 
 var commander = null;
 
-var IstrolidClient = function(serverName) {
-    this.intp = null;
-    this.network = null;
+var IstrolidClient = function() {
+    this.servers = {};
     this.rootNet = null;
-    this.serverName = serverName;
-    this.global = serverName ? false : true;
+    this.zJson = new ZJson(prot.commonWords);
 
     this.chat = {
         players: {},
@@ -42,37 +40,34 @@ var IstrolidClient = function(serverName) {
         account.signin();
     };
 
-    this.sendMessage = function(msg) {
-        if(this.global)
-            this.rootNet.send("message", {text: msg});
-        else
-            this.rootNet.send("message", {text: msg, channel: serverName});
+    this.sendMessage = function(msg, channel) {
+        this.rootNet.send("message", {text: msg, channel: channel});
     };
 
     this.close = function() {
-        if(this.network)
-            this.network.close();
+        for(let net of this.servers)
+            net.close();
         this.rootNet.close();
     };
 
-    this.joinServer = function() {
-        if(this.global) return;
-
+    this.joinServer = function(serverName) {
         var base, ref;
         var server = (ref = this.rootNet.servers) != null ? ref[serverName] : void 0;
         if (!server) {
-            //console.log("server not found");
+            console.log("server " + serverName + " not found");
             return;
         }
-        this.intp = new Interpolator(this);
-        if (this.network != null) {
-            if (typeof this.network.close === "function") {
-                this.network.close();
-            }
+        if(global.DEBUG) console.log("joining server " + serverName);
+        let net = this.servers[serverName];
+        if (net != null) {
+            net.close();
         }
-        this.network = new Connection(server.address);
-        this.chat.channel = serverName;
-        this.rootNet.sendMode();
+        this.servers[serverName] = {
+            network: new Connection(server.address, serverName),
+            intp: new Interpolator(serverName, this)
+        };
+        //this.chat.channel = serverName;
+        //this.rootNet.sendMode();
     };
 
     //from src/network.js
@@ -82,9 +77,10 @@ var IstrolidClient = function(serverName) {
             slice = [].slice;
 
         Connection = (function() {
-            function Connection(address) {
+            function Connection(address, serverName) {
                 this.address = address;
-                //console.log("connecting to", this.address);
+                this.serverName = serverName;
+                if(global.DEBUG) console.log(serverName, "connecting to", this.address);
                 this.connect();
             }
 
@@ -96,27 +92,27 @@ var IstrolidClient = function(serverName) {
                     return function(e) {
                         //console.log("ws open"/*, e*/);
                         _this.sendPlayer();
-                        //console.log("sending game key", commander.name, IstrolidClient_this.rootNet.gameKey);
+                        if(global.DEBUG) console.log(_this.serverName, "sending game key", commander.name, IstrolidClient_this.rootNet.gameKey);
                         _this.send("gameKey", commander.name, IstrolidClient_this.rootNet.gameKey);
                     };
                 })(this);
                 this.websocket.onclose = (function(_this) {
                     return function(e) {
-                        //console.log("ws close");
+                        if(global.DEBUG) console.log(_this.serverName, "ws close");
                     };
                 })(this);
                 this.websocket.onmessage = (function(_this) {
                     return function(e) {
                         var data, packet;
                         packet = new DataView(e.data);
-                        data = IstrolidClient_this.intp.zJson.loadDv(packet);
-                        //console.log("Msg: " + JSON.stringify(data).substring(0, 500));
-                        return IstrolidClient_this.intp.recv(data);
+                        data = IstrolidClient_this.zJson.loadDv(packet);
+                        //if(global.DEBUG) console.log(_this.serverName, "Msg: " + JSON.stringify(data).substring(0, 500));
+                        IstrolidClient_this.servers[_this.serverName].intp.recv(data);
                     };
                 })(this);
                 return this.websocket.onerror = (function(_this) {
                     return function(e) {
-                        //console.log("ws error", e);
+                        console.log(_this.serverName, "ws error", e);
                     };
                 })(this);
             };
@@ -129,8 +125,8 @@ var IstrolidClient = function(serverName) {
                 var args, dv;
                 args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
                 if (this.websocket.readyState === 1) {
-                    //console.log("Send: " + JSON.stringify(args));
-                    dv = IstrolidClient_this.intp.zJson.dumpDv(args);
+                    if(global.DEBUG) console.log(this.serverName, "Send: " + JSON.stringify(args));
+                    dv = IstrolidClient_this.zJson.dumpDv(args);
                     return this.websocket.send(dv.buffer);
                 }
             };
@@ -170,7 +166,7 @@ var IstrolidClient = function(serverName) {
                 this.websocket = new WebSocket(this.address, undefined, undefined, undefined, undefined, wsOptions);
                 this.websocket.onopen = (function(_this) {
                     return function(e) {
-                        //console.log("Connect");
+                        if(global.DEBUG) console.log("Connecting to root");
                         //onecup.refresh();
                         account.lastRootSave = {};
                         account.connectedToRoot();
@@ -180,14 +176,14 @@ var IstrolidClient = function(serverName) {
                 this.websocket.onclose = (function(_this) {
                     return function(e) {
                         //onecup.refresh();
-                        //return console.log("root ws close");
+                        if(global.DEBUG) console.log("root ws close");
                     };
                 })(this);
                 this.websocket.onmessage = (function(_this) {
                     return function(e) {
                         var _, k, msg, name, player, ref, ref1, ref2, ref3, s, server, v;
                         //onecup.refresh();
-                        //console.log("RMsg: " + e.data.substring(0, 200));
+                        //if(global.DEBUG) console.log("RMsg: " + e.data.substring(0, 200));
                         msg = JSON.parse(e.data);
                         switch (msg[0]) {
                             case "serversStats":
@@ -198,9 +194,8 @@ var IstrolidClient = function(serverName) {
                                 for (_ in ref) {
                                     s = ref[_];
                                     _this.servers[s.name] = s;
-                                    IstrolidClient_this.emit('server', s);
-                                    if(s.name === serverName) {
-                                        IstrolidClient_this.joinServer();
+                                    if(s.name) {
+                                        IstrolidClient_this.joinServer(s.name);
                                     }
                                 }
                                 //return onecup.refresh();
@@ -244,8 +239,10 @@ var IstrolidClient = function(serverName) {
                             case "message":
                                 msg[1].time = Date.now();
                                 IstrolidClient_this.chat.lines.push(msg[1]);
-                                if(msg[1].text && (!msg[1].channel || msg[1].channel === serverName))
+                                /* Getting message from multiple server doesn't work (yet)
+                                if(msg[1].text)
                                     IstrolidClient_this.emit('message', msg[1]);
+                                    */
                                 break;
                                 /*
                             return after(100, function() {
@@ -293,7 +290,7 @@ var IstrolidClient = function(serverName) {
                 var args;
                 args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
                 if (this.websocket.readyState === 1) {
-                    //console.log("RSend: " + JSON.stringify(args));
+                    if(global.DEBUG) console.log("RSend: " + JSON.stringify(args));
                     return this.websocket.send(JSON.stringify(args));
                 }
             };
@@ -1173,7 +1170,7 @@ zjson - binary json sirelizer with some strange features
         hasProp = {}.hasOwnProperty;
 
     Interpolator = (function() {
-        function Interpolator(emitter) {
+        function Interpolator(serverName, emitter) {
             this.step = 0;
             this.firstUpdate = true;
             this.players = [];
@@ -1191,7 +1188,7 @@ zjson - binary json sirelizer with some strange features
             this.prevWait = 2;
             this.state = "waiting";
             this.pref = {};
-            this.zJson = new ZJson(prot.commonWords);
+            this.serverName = serverName;
             this.emitter = emitter;
         }
 
@@ -1246,17 +1243,19 @@ zjson - binary json sirelizer with some strange features
             }
             if (this.state === "starting") {
                 //this.gameStarted();
-                this.emitter.emit('gamestarting');
+                this.emitter.emit('gamestarting', {server: this.serverName, type: this.serverType});
             }
             if (this.state === "ended") {
                 this.emitter.emit('gameended', {
+                    server: this.serverName,
+                    type: this.serverType,
                     players: this.players.filter(p => p.side === "alpha" || p.side === "beta"),
                     win: this.winningSide
                 });
             }
             if (data.serverType) {
                 this.serverType = data.serverType;
-                this.emitter.emit('serverchange', this.serverType);
+                this.emitter.emit('serverchange', {name: this.serverName, type: this.serverType});
             }
             if (data.countDown != null) {
                 this.countDown = data.countDown;

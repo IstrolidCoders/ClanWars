@@ -3,7 +3,7 @@ var {IstrolidClient} = require('./IstrolidClient.js');
 var pg = require('pg');
 
 const PORT = process.env.PORT || 8080;
-const DEBUG = process.env.DEBUG;
+global.DEBUG = process.env.DEBUG;
 
 var db = new pg.Client({
     connectionString: process.env.DATABASE_URL,
@@ -12,8 +12,7 @@ var db = new pg.Client({
 db.connect().then(() => console.log("db connected"));
 
 var app = express();
-var istroClients = [];
-var istroGlobal = new IstrolidClient();
+var istroClient = new IstrolidClient();
 
 app.get('/istrolid', (req, res) => {
     db.query('SELECT * from BattleRecords;', (err, qres) => {
@@ -34,25 +33,13 @@ var server = app.listen(PORT, function () {
     console.log("Listening on port", server.address().port);
 });
 
-istroGlobal.on('server', s => {
-    if(!istroClients[s.name]) {
-        if(s.name) {
-            if(DEBUG) console.log("Connecting to server", s.name);
-            let client = new IstrolidClient(s.name);
-            client.on('gameended', e => {
-                if(DEBUG)
-                    console.log("Game ended", [client.serverName, client.intp.serverType, e.players.map(p => JSON.stringify(p)), e.win]);
-                db.query('INSERT INTO BattleRecords (server, type, players, win) VALUES ($1, $2, $3::json[], $4);',
-                    [client.serverName, client.intp.serverType, e.players.map(p => JSON.stringify(p)), e.win],
-                    (err, res) => {
-                        if(err) throw err;
-                    });
-            });
-
-            client.connect();
-            istroClients.push(client);
-        }
-    }
+istroClient.on('gameended', e => {
+    if(global.DEBUG)
+        console.log("Game ended", [e.server, e.type, e.players.map(p => JSON.stringify(p)), e.win]);
+    db.query('INSERT INTO BattleRecords (server, type, players, win) VALUES ($1, $2, $3::json[], $4);',
+        [e.server, e.type, e.players.map(p => JSON.stringify(p)), e.win],
+        (err, res) => {
+            if(err) throw err;
+        });
 });
-
-istroGlobal.connect();
+istroClient.connect();
