@@ -16,14 +16,17 @@
     <body>
         <center>
             <b>Istrolid Battle Records</b>
-            <table id="data" border="1">
-                <tr>
-                    <td>Server</td>
-                    <td>Type</td>
-                    <td>Alpha</td>
-                    <td>Beta</td>
-                    <td>Side</td>
-                </tr>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <td>Server</td>
+                        <td>Type</td>
+                        <td>Alpha</td>
+                        <td>Beta</td>
+                        <td>Side</td>
+                    </tr>
+                </thead>
+                <tbody id="data"></tbody>
             </table>
         </center>
         <script>
@@ -43,7 +46,7 @@
                             });
 
                             let table = document.getElementById('data');
-                            table.insertAdjacentHTML('beforeend', data);
+                            table.innerHTML = data;
                         } else {
                             console.log("Invalid response");
                         }
