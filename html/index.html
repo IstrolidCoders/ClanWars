@@ -11,8 +11,8 @@
             function updateData() {
                 var http  = new XMLHttpRequest();
                 http.onreadystatechange = () => {
-                    if(this.readyState == 4 && this.status == 200) {
-                        var rows = this.response;
+                    if(http.readyState == 4 && http.status == 200) {
+                        var rows = http.response;
                         if(Array.isArray(rows)) {
                             let data = ""
                             rows.forEach(e => {
