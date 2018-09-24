@@ -22,7 +22,7 @@ app.get('/istrolid', (req, res) => {
     });
 });
 
-app.get('/', (req, res) => {
+app.get('/*', (req, res) => {
     res.sendFile(req.path, {root: 'html'});
 });
 
