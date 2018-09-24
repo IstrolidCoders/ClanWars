@@ -3,10 +3,28 @@
 <html>
     <head>
         <link rel="icon" type="image/png" href="/favicon.png"/>
+        <style>
+            div.hover {
+                height: 1em;
+                overflow-y: hidden;
+            }
+            div.hover:hover {
+                height: auto;
+            }
+        </style>
     </head>
     <body>
-        <center><b>Istrolid Battle Records</b></center>
-        <table id="data"</table>
+        <center>
+            <b>Istrolid Battle Records</b>
+            <table id="data" border="1">
+                <tr>
+                    <td>Server</td>
+                    <td>Type</td>
+                    <td>Players</td>
+                    <td>Side</td>
+                </tr>
+            </table>
+        </center>
         <script>
             function updateData() {
                 var http  = new XMLHttpRequest();
@@ -16,7 +34,11 @@
                         if(Array.isArray(rows)) {
                             let data = ""
                             rows.forEach(e => {
-                                data += "<tr><td>" + e.server + "</td><td>" + e.type + "</td><td>" + e.win + "</td></tr>";
+                                data += "<tr><td>" + e.server + "</td><td>" + e.type + "<td><div class=\"hover\">...<br/>";
+                                e.players.filter(p => p.side === "alpha").forEach(e => data += e.name + "<br/>");
+                                data += "</div></td><td><div class=\"hover\">...<br/>"
+                                e.players.filter(p => p.side === "beta").forEach(e => data += e.name + "<br/>");
+                                data += "</div></td><td>" + e.win + "</td></tr>";
                             });
 
                             let table = document.getElementById('data');
