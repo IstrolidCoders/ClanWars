@@ -20,7 +20,8 @@
                 <tr>
                     <td>Server</td>
                     <td>Type</td>
-                    <td>Players</td>
+                    <td>Alpha</td>
+                    <td>Beta</td>
                     <td>Side</td>
                 </tr>
             </table>
@@ -34,9 +35,9 @@
                         if(Array.isArray(rows)) {
                             let data = ""
                             rows.forEach(e => {
-                                data += "<tr><td>" + e.server + "</td><td>" + e.type + "<td><div class=\"hover\">...<br/>";
+                                data += "<tr><td>" + e.server + "</td><td>" + e.type + "<td><div class=\"hover\">hover<br/>";
                                 e.players.filter(p => p.side === "alpha").forEach(e => data += e.name + "<br/>");
-                                data += "</div></td><td><div class=\"hover\">...<br/>"
+                                data += "</div></td><td><div class=\"hover\">hover<br/>"
                                 e.players.filter(p => p.side === "beta").forEach(e => data += e.name + "<br/>");
                                 data += "</div></td><td>" + e.win + "</td></tr>";
                             });
