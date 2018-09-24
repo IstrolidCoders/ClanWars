@@ -99,6 +99,7 @@ var IstrolidClient = function() {
                 this.websocket.onclose = (function(_this) {
                     return function(e) {
                         if(global.DEBUG) console.log(_this.serverName, "ws close");
+                        delete IstrolidClient_this.servers[_this.serverName];
                     };
                 })(this);
                 this.websocket.onmessage = (function(_this) {
@@ -177,6 +178,7 @@ var IstrolidClient = function() {
                     return function(e) {
                         //onecup.refresh();
                         if(global.DEBUG) console.log("root ws close");
+                        setTimeout(this.connect, 1000);
                     };
                 })(this);
                 this.websocket.onmessage = (function(_this) {
@@ -205,6 +207,9 @@ var IstrolidClient = function() {
                                     server = ref2[name];
                                     if (server === null) {
                                         delete _this.servers[name];
+                                        if(IstrolidClient_this.servers[name]) {
+                                            IstrolidClient_this.servers[name].network.close();
+                                        }
                                     } else {
                                         if (_this.servers[name] == null) {
                                             _this.servers[name] = {};
@@ -212,6 +217,9 @@ var IstrolidClient = function() {
                                         for (k in server) {
                                             v = server[k];
                                             _this.servers[name][k] = v;
+                                        }
+                                        if(!IstrolidClient_this.servers[name]) {
+                                            IstrolidClient_this.joinServer(name);
                                         }
                                     }
                                 }
