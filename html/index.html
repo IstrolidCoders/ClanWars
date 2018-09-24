@@ -3,15 +3,6 @@
 <html>
     <head>
         <link rel="icon" type="image/png" href="/favicon.png"/>
-        <style>
-            div.hover {
-                height: 1em;
-                overflow-y: hidden;
-            }
-            div.hover:hover {
-                height: auto;
-            }
-        </style>
     </head>
     <body>
         <center>
@@ -38,9 +29,9 @@
                         if(Array.isArray(rows)) {
                             let data = ""
                             rows.forEach(e => {
-                                data += "<tr><td>" + e.server + "</td><td>" + e.type + "<td><div class=\"hover\">hover<br/>";
+                                data += "<tr><td>" + e.server + "</td><td>" + e.type + "<td><div>";
                                 e.players.filter(p => p.side === "alpha").forEach(e => data += e.name + "<br/>");
-                                data += "</div></td><td><div class=\"hover\">hover<br/>"
+                                data += "</div></td><td><div>"
                                 e.players.filter(p => p.side === "beta").forEach(e => data += e.name + "<br/>");
                                 data += "</div></td><td>" + e.win + "</td></tr>";
                             });
